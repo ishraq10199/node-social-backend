@@ -1,5 +1,5 @@
 <em>
-This project is the backend part of `node-social`. I used it for brushing up on the basics of MERN. Also used Websockets (see first commit) and GraphQL.
+This project is the backend part of `node-social`. I used it for brushing up on the basics of MERN. Also used Websockets (see second commit) and GraphQL.
 <hr/>
 
 |--- Backend can be found here: https://github.com/ishraq10199/node-social-backend/ <br/>
