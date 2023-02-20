@@ -1,13 +1,15 @@
+const path = require("path");
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
-const feedRoutes = require("./routes/feed");
-const authRoutes = require("./routes/auth");
-const io = require("./socket");
 const corsMiddleware = require("./middleware/cors");
-const path = require("path");
 const multer = require("multer");
 const { randomUUID } = require("crypto");
+const auth = require("./middleware/auth");
+const { graphqlHTTP } = require("express-graphql");
+const graphqlSchema = require("./graphql/schema");
+const graphqlResolver = require("./graphql/resolvers");
+const { clearImage } = require("./utils/file");
 const app = express();
 
 const fileStorage = multer.diskStorage({
@@ -39,8 +41,43 @@ app.use("/images", express.static(path.join(__dirname, "images")));
 // --- SET CORS HEADERS --- //
 app.use(corsMiddleware);
 
-app.use("/feed", feedRoutes);
-app.use("/auth", authRoutes);
+app.use(auth);
+
+app.put("/post-image", (req, res, next) => {
+  if (!req.isAuth) {
+    throw new Error("Not authenticated.");
+  }
+  if (!req.file) {
+    return res.status(200).json({ message: "No file provided." });
+  }
+  if (req.body.oldPath) {
+    clearImage(req.body.oldPath);
+  }
+  const windowsCorrectedFilePath = req.file.path.replace("\\", "/");
+
+  return res
+    .status(201)
+    .json({ message: "File stored", filePath: windowsCorrectedFilePath });
+});
+
+app.use(
+  "/graphql",
+  graphqlHTTP({
+    schema: graphqlSchema,
+    rootValue: graphqlResolver,
+    graphiql: true,
+    customFormatErrorFn(err) {
+      if (!err.originalError) {
+        return err;
+      }
+      const data = err.originalError.data;
+      const message = err.message || "An error occured.";
+      const code = err.originalError.code || 500;
+
+      return { message: message, status: code, data: data };
+    },
+  })
+);
 
 app.use((error, req, res, next) => {
   console.log(error);
@@ -58,11 +95,7 @@ mongoose
     "mongodb+srv://mongotest:mongotest@cluster0.oxhsijr.mongodb.net/test2"
   )
   .then(() => {
-    const server = app.listen(8888);
-    const io_connection = io.init(server);
-    io_connection.on("connection", (socket) => {
-      console.log("Client connected");
-    });
+    app.listen(8888);
   })
   .catch((err) => {
     console.log(err);
