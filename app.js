@@ -92,7 +92,7 @@ mongoose.set("strictQuery", true);
 
 mongoose
   .connect(
-    "mongodb+srv://mongotest:mongotest@cluster0.oxhsijr.mongodb.net/test2"
+    `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_CLUSTER}/${process.env.MONGO_DATABASE}`
   )
   .then(() => {
     app.listen(8888);
