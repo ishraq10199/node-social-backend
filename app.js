@@ -10,6 +10,7 @@ const { graphqlHTTP } = require("express-graphql");
 const graphqlSchema = require("./graphql/schema");
 const graphqlResolver = require("./graphql/resolvers");
 const { clearImage } = require("./utils/file");
+require('dotenv').config()
 const app = express();
 
 const fileStorage = multer.diskStorage({
